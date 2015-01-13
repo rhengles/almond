@@ -1,0 +1,28 @@
+{
+  "name": "almond-wrap",
+  "version": "0.0.1",
+  "description": "A small extension of Almond which adds features from the public interface and is always up-to-date.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rhengles/almond-wrap.git"
+  },
+  "keywords": [
+    "almond",
+    "require",
+    "requirejs",
+    "define",
+    "amd",
+    "loader",
+    "wrap"
+  ],
+  "author": "Rafael Hengles (@rhengles)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rhengles/almond-wrap/issues"
+  },
+  "homepage": "https://github.com/rhengles/almond-wrap",
+  "dependencies": {
+    "minimist": "^1.1.0"
+  }
+}

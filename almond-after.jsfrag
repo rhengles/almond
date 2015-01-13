@@ -1,0 +1,10 @@
+
+return {
+    require: require,
+    define: define,
+    factory: factory
+};
+
+}
+
+})();

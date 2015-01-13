@@ -1,0 +1,34 @@
+
+var requirejs, require, define;
+(function() {
+
+var prevRequirejs,
+    prevRequire,
+    prevDefine,
+    rootInstance = factory();
+
+return global();
+
+function global() {
+    prevRequirejs = requirejs;
+    prevRequire = require;
+    prevDefine = define;
+
+    requirejs = require = rootInstance.require;
+    define = rootInstance.define;
+
+    require.factory = factory;
+    require.global = global;
+    require.noConflict = noConflict;
+
+    return rootInstance;
+}
+
+function noConflict() {
+    requirejs = prevRequirejs;
+    require = prevRequire;
+    define = prevDefine;
+    return rootInstance;
+}
+
+function factory() {
