@@ -1,50 +1,56 @@
+var tryLoaders = require('./try-loaders');
 
 function fnCache(loaderSource, loaderCache, saverCache) {
-  var cache;
+  var cache,
+      loaders = [].concat(
+        loaderSource || [],
+        loaderCache  || []
+      );
   return {
     sync: getCacheSync,
     async: getCache
   };
   function getCacheSync() {
     if ( !cache ) {
-      try {
-        cache = loaderSource.sync();
-      } catch (e) {
-      }
-      if ( !cache ) {
-        cache = loaderCache.sync();
+      cache = tryLoaders(loaders).sync();
+      if ( saverCache ) {
         saverCache.sync(cache);
       }
     }
     return cache;
   }
   function getCache(callback) {
+    //console.error('c1');
     if ( cache ) {
+      //console.error('c2');
       process.nextTick(resolveCache);
       return;
     }
-    loaderSource.async(loaderSourceCallback);
+    tryLoaders(loaders).async(loaderCallback);
+    //console.error('c3');
     return;
     function resolveCache() {
+      //console.error('c4');
       callback(null, cache);
     }
-    function loaderSourceCallback(err, data) {
+    function loaderCallback(err, data) {
+      //console.error('c5');
       if ( err ) {
-        loaderCache.async(loaderCacheCallback);
-        return;
-      }
-      cache = data;
-      saverCache.async(cache, saverCacheCallback);
-    }
-    function loaderCacheCallback(err, data) {
-      if ( err ) {
+        //console.error('c6');
         callback(err, data);
         return;
       }
       cache = data;
-      callback(err, cache);
+      if ( saverCache ) {
+        //console.error('c7');
+        saverCache.async(cache, saverCacheCallback);
+      } else {
+        //console.error('c8');
+        resolveCache();
+      }
     }
     function saverCacheCallback(err) {
+      //console.error('c9');
       callback(err, cache);
     }
   }

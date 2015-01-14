@@ -2,13 +2,8 @@
 function hasOwn(obj, prop) {
   return {}.hasOwnProperty.call(obj, prop);
 }
-function cliOpts(argv, opt) {
-  var args = {
-        saveCache: 's',
-        loadCache: 'l',
-        stdOut: 'o'
-      },
-      argsLower = {},
+function cliOpts(argv, opt, args, nameArgs) {
+  var argsLower = {},
       keys = {},
       count = argv.length,
       h = '-',
@@ -39,6 +34,8 @@ function cliOpts(argv, opt) {
           }
         }
       }
+    } else {
+      nameArgs.push(a);
     }
   }
   return opt;

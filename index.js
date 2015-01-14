@@ -20,8 +20,8 @@ function almondWrap(opt) {
       after  = getLoader('almond-after.jsfrag'),
       concat = fnConcat([before, almond, after]),
       c_path = getPath('almond-wrap.js'),
-      c_load = /*opt.loadCache &&*/ fnLoader(c_path),
-      c_save = /*opt.saveCache &&*/ fnSaver(c_path)
+      c_load = opt.loadCache && fnLoader(c_path),
+      c_save = opt.saveCache && fnSaver(c_path)
       cache  = fnCache(concat, c_load, c_save);
 
   concat.almond = almond;
@@ -39,46 +39,77 @@ module.exports = almondWrap;
 if ( require.main === module ) {
 // User is calling directly from command line
 
-var opt = {
-      saveCache: true,
-      loadCache: false,
-      stdOut: false
-    };
+function cli(opt) {
 
-opt = cliOpts(process.argv.slice(2), opt);
-
-stConcat(process.stdin, function(data) {
-  var file = process.argv[2];
-  if ( !file && null == data ) {
-    console.error('Usage: '.concat(
-      '"node almond-wrap/ [<] path/to/almond.js [> output.js]"\n',
-      '\n',
-      'Options:\n',
-      '  -l --loadcache: load compiled file from cache if source not found\n',
-      '  -L --no-loadcache: do not load from cache [default]\n',
-      '  -s --savecache: save compiled file to cache [default]\n',
-      '  -S --no-savecache: do not save to cache\n',
-      '  -o --stdout: print compiled file to stdOut\n',
-      '  -O --no-stdOut: do not print to stdOut\n',
-      '\n',
-      'default options: -LsO'
-    ));
+  if ( !opt.path && null == opt.source ) {
+    console.error(
+      [ 'Usage: "node almond-wrap/ path/to/almond.js"',
+      , '"node almond-wrap/ -io < path/to/almond.js > output.js"',
+      , '',
+      , 'Options:',
+      , '  -l --loadcache: load compiled file from cache if source not found',
+      , '  -L --no-loadcache: do not load from cache [default]',
+      , '  -s --savecache: save compiled file to cache [default]',
+      , '  -S --no-savecache: do not save to cache',
+      , '  -i --stdin: read almond from stdin',
+      , '  -I --no-stdin: do not read from stdin [default]',
+      , '  -o --stdout: print compiled file to stdout',
+      , '  -O --no-stdout: do not print to stdout [default]',
+      , '',
+      , 'default options: -sLIO (short for the following:)',
+      , '  --savecache',
+      , '  --no-loadcache',
+      , '  --no-stdin',
+      , '  --no-stdout'
+      ].join('\n').replace(/\n\n/g, '\n') // ??
+    );
     process.exit(1);
-  //} else {
-  //  console.error(JSON.stringify([file, data]));
   }
-  almondWrap({
-    path: file,
-    source: data
-  }).async(function(err, data) {
-    //console.error(JSON.stringify([file, data]));
+  almondWrap(opt).async(function(err, data) {
     if ( err ) {
       console.error(err);
       process.exit(1);
-    } else if ( data ) {
-      process.stdout.write(data);
+    } else if ( opt.stdOut ) {
+      if ( data ) {
+        console.error('Data: '+data.length+' chars');
+        process.stdout.write(data);
+      } else {
+        console.error('No data');
+      }
     }
   });
-});
+}
+
+var opt = {
+      saveCache: true,
+      loadCache: false,
+      stdIn: false,
+      stdOut: false,
+      path: null,
+      source: null
+    },
+    args = {
+      saveCache: 's',
+      loadCache: 'l',
+      stdIn    : 'i',
+      stdOut   : 'o'
+    },
+    nameArgs = [];
+
+opt = cliOpts(process.argv.slice(2), opt, args, nameArgs);
+
+opt.path = nameArgs[0] || null;
+
+if ( opt.stdIn ) {
+  stConcat(process.stdin, function(data) {
+    console.error(opt);
+    console.error('Data from stdIn: '+data.length+' chars');
+    opt.source = data;
+    cli(opt);
+  });
+} else {
+  console.error(opt);
+  cli(opt);
+}
 
 }
