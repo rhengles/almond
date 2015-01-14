@@ -43,8 +43,8 @@ function cli(opt) {
 
   if ( !opt.path && null == opt.source ) {
     console.error(
-      [ 'Usage: "node almond-wrap/ path/to/almond.js"',
-      , '"node almond-wrap/ -io < path/to/almond.js > output.js"',
+      [ 'Usage: "almond-wrap path/to/almond.js"',
+      , 'Usage: "almond-wrap -io < path/to/almond.js > output.js"',
       , '',
       , 'Options:',
       , '  -l --loadcache: load compiled file from cache if source not found',
@@ -56,9 +56,9 @@ function cli(opt) {
       , '  -o --stdout: print compiled file to stdout',
       , '  -O --no-stdout: do not print to stdout [default]',
       , '',
-      , 'default options: -sLIO (short for the following:)',
-      , '  --savecache',
+      , 'default options: -LsIO (short for the following:)',
       , '  --no-loadcache',
+      , '  --savecache',
       , '  --no-stdin',
       , '  --no-stdout'
       ].join('\n').replace(/\n\n/g, '\n') // ??
@@ -81,16 +81,16 @@ function cli(opt) {
 }
 
 var opt = {
-      saveCache: true,
       loadCache: false,
+      saveCache: true,
       stdIn: false,
       stdOut: false,
       path: null,
       source: null
     },
     args = {
-      saveCache: 's',
       loadCache: 'l',
+      saveCache: 's',
       stdIn    : 'i',
       stdOut   : 'o'
     },
@@ -102,13 +102,13 @@ opt.path = nameArgs[0] || null;
 
 if ( opt.stdIn ) {
   stConcat(process.stdin, function(data) {
-    console.error(opt);
+    //console.error(opt);
     console.error('Data from stdIn: '+data.length+' chars');
     opt.source = data;
     cli(opt);
   });
 } else {
-  console.error(opt);
+  //console.error(opt);
   cli(opt);
 }
 
