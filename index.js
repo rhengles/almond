@@ -43,8 +43,11 @@ function cli(opt) {
 
   if ( !opt.path && null == opt.source ) {
     console.error(
-      [ 'Usage: "almond-wrap path/to/almond.js"',
-      , 'Usage: "almond-wrap -io < path/to/almond.js > output.js"',
+      [ 'Usage:',
+      , '  almond-wrap path/to/almond.js',
+      , '  almond-wrap path/to/almond.js -o > output.js',
+      , '  almond-wrap -i  < path/to/almond.js',
+      , '  almond-wrap -io < path/to/almond.js > output.js',
       , '',
       , 'Options:',
       , '  -l --loadcache: load compiled file from cache if source not found',
@@ -56,7 +59,7 @@ function cli(opt) {
       , '  -o --stdout: print compiled file to stdout',
       , '  -O --no-stdout: do not print to stdout [default]',
       , '',
-      , 'default options: -LsIO (short for the following:)',
+      , 'Default options: -LsIO (short for the following:)',
       , '  --no-loadcache',
       , '  --savecache',
       , '  --no-stdin',

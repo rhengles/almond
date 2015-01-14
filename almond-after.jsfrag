@@ -1,9 +1,14 @@
 
-return {
-    require: require,
-    define: define,
-    factory: factory
-};
+var instance = {
+        require: require,
+        define: define,
+        factory: factory,
+        package: null
+    };
+
+instance.package = packageInstance(instance);
+
+return instance;
 
 }
 

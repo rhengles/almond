@@ -1,6 +1,6 @@
 
 var requirejs, require, define;
-(function() {
+(function(undef) {
 
 var prevRequirejs,
     prevRequire,
@@ -29,6 +29,81 @@ function noConflict() {
     require = prevRequire;
     define = prevDefine;
     return rootInstance;
+}
+
+function packageInstance(instance, pkgDeps) {
+    var require = instance.require,
+        define  = instance.define,
+        defMap  = {},
+        pkgMap  = {},
+        pkgs;
+    instance.require = package.require = packageRequire;
+    instance.define  = moduleDefine;
+    package .define  = packageDefine;
+    instance.package = package;
+    instance._defMap = defMap;
+
+    return instance;
+
+    function getPkgs() {
+        if ( !pkgs ) {
+            pkgs = requireMap(pkgDeps || []);
+        }
+        return pkgs;
+    }
+    function getPkgOfModule(name) {
+        var pkg = pkgMap[name];
+        if ( pkg ) return pkg;
+        getPkgs();
+        var pcount = pkgs.length;
+        for ( var i = 0; i < pcount; i++ ) {
+            pkg = pkgs[i];
+            var found = pkg._defMap[name];
+            if ( found ) return pkg;
+        }
+    }
+    function requireMap(deps) {
+        var mods = [],
+            count = deps.length;
+        for ( var i = 0; i < count; i++ ) {
+            mods[i] = require(deps[i]);
+        }
+        return mods;
+    }
+    function package(name, deps) {
+        try {
+            return packageRequire(name);
+        } catch (e) {
+            return packageDefine(name, deps);
+        }
+    }
+    function moduleRequire(name) {
+        var ext = getPkgOfModule(name);
+        return ext
+            ? ext.require(name)
+            : require(name);
+    }
+    function packageRequire(name) {
+        return require(name);
+    }
+    function moduleDefine(name) {
+        defMap[name] = true;
+        return define.apply(this, arguments);
+    }
+    function packageDefine(name, subPkgDeps) {
+        var pkg = packageInstance(instance.factory(), subPkgDeps);
+        define(name, function() {
+            return pkg;
+        });
+        return pkg;
+    }
+}
+
+function injectPackageModules(pkgs, defined) {
+  var pcount = pkgs.length;
+  for ( var i = 0; i < pcount; i++ ) {
+    var mods = pkgs[i].require._defined
+  }
 }
 
 function factory() {
