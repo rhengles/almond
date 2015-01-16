@@ -31,79 +31,106 @@ function noConflict() {
     return rootInstance;
 }
 
-function packageInstance(instance, pkgDeps) {
+function packageInstance(instance, opt) {//pkgDeps, parent
     var require = instance.require,
         define  = instance.define,
-        defMap  = {},
-        pkgMap  = {},
-        pkgs;
-    instance.require = package.require = packageRequire;
+        defMod  = {},
+        defPkg  = {},
+        pkgDeps = opt && opt.deps,
+        parent  = opt && opt.parent;
+    moduleDefine.amd = define.amd;
+    instance.require = moduleRequire;
     instance.define  = moduleDefine;
+    package .require = require;
     package .define  = packageDefine;
     instance.package = package;
-    instance._defMap = defMap;
+    instance._defMod = defMod;
+    instance._defPkg = defPkg;
+    instance._pkg    = opt;
 
     return instance;
 
-    function getPkgs() {
-        if ( !pkgs ) {
-            pkgs = requireMap(pkgDeps || []);
-        }
-        return pkgs;
+    function importPkgModule(name, pkg) {
+        define(name, function() {
+            return pkg.require(name);
+        });
     }
-    function getPkgOfModule(name) {
-        var pkg = pkgMap[name];
-        if ( pkg ) return pkg;
-        getPkgs();
-        var pcount = pkgs.length;
+    function importPkgDeps(pkg) {
+        var pkgMods = pkg._defMod;
+        for ( var k in pkgMods ) {
+            importPkgModule(k, pkg);
+        }
+    }
+    function importPkgs() {
+        var pkgs = moduleRequireManyFrom(pkgDeps, parent.require),
+            pcount = pkgDeps.length;
         for ( var i = 0; i < pcount; i++ ) {
-            pkg = pkgs[i];
-            var found = pkg._defMap[name];
-            if ( found ) return pkg;
+            importPkgDeps(pkgs[i]);
         }
-    }
-    function requireMap(deps) {
-        var mods = [],
-            count = deps.length;
-        for ( var i = 0; i < count; i++ ) {
-            mods[i] = require(deps[i]);
-        }
-        return mods;
     }
     function package(name, deps) {
-        try {
-            return packageRequire(name);
-        } catch (e) {
+        if ( defPkg[name] ) {
+            if ( deps ) {
+                throw new Error('Can\'t change deps of defined package '+name);
+            }
+            return require(name);
+        } else {
             return packageDefine(name, deps);
         }
     }
-    function moduleRequire(name) {
-        var ext = getPkgOfModule(name);
-        return ext
-            ? ext.require(name)
-            : require(name);
+    function moduleRequire(deps, callback) {
+      var one = false;
+      if ( 'string' === typeof deps ) {
+          one = true;
+          deps = [moduleRequireOne(deps)];
+      } else if ( deps.splice ) {
+          deps = moduleRequireMany(deps);
+      } else {
+          return require.apply(instance, arguments);
+      }
+      if ( one ) {
+          return deps[0];
+      } else {
+          callback && callback.apply(undef, deps);
+          return instance.require;
+      }
     }
-    function packageRequire(name) {
+    function moduleRequireManyFrom(deps, reqSource) {
+        var mods = [],
+            count = deps.length;
+        for ( var i = 0; i < count; i++ ) {
+            mods[i] = reqSource(deps[i]);
+        }
+        return mods;
+    }
+    function moduleRequireMany(deps) {
+        return moduleRequireManyFrom(deps, moduleRequireOne);
+    }
+    function moduleRequireOne(name) {
+        if ( pkgDeps && parent ) {
+            importPkgs();
+            pkgDeps = null;
+            parent  = null;
+        }
         return require(name);
     }
     function moduleDefine(name) {
-        defMap[name] = true;
+        defMod[name] = true;
         return define.apply(this, arguments);
     }
     function packageDefine(name, subPkgDeps) {
-        var pkg = packageInstance(instance.factory(), subPkgDeps);
+        defPkg[name] = true;
+        var pkgOpt = {
+                name: name,
+                deps: subPkgDeps,
+                parent: instance
+            },
+            pkg = packageInstance(instance.factory(), pkgOpt);
         define(name, function() {
             return pkg;
         });
         return pkg;
     }
-}
-
-function injectPackageModules(pkgs, defined) {
-  var pcount = pkgs.length;
-  for ( var i = 0; i < pcount; i++ ) {
-    var mods = pkgs[i].require._defined
-  }
 }
 
 function factory() {
